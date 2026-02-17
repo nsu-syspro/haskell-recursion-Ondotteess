@@ -25,7 +25,11 @@ import Task1 (map, reverse, sum)
 -- 1
 
 luhnModN :: Int -> (a -> Int) -> [a] -> Int
-luhnModN = error "TODO: define luhnModN"
+luhnModN n f xs =
+  let digits = map f xs
+      s = sum (map (normalizeModN n) (doubleEveryOther (reverse digits)))
+      r = s `mod` n
+  in (n - r) `mod` n
 
 -----------------------------------
 --
@@ -37,7 +41,7 @@ luhnModN = error "TODO: define luhnModN"
 -- 1
 
 luhnDec :: [Int] -> Int
-luhnDec = error "TODO: define luhnDec"
+luhnDec = luhnModN 10 id
 
 -----------------------------------
 --
@@ -49,7 +53,7 @@ luhnDec = error "TODO: define luhnDec"
 -- 15
 
 luhnHex :: [Char] -> Int
-luhnHex = error "TODO: define luhnHex"
+luhnHex = luhnModN 16 digitToInt
 
 -----------------------------------
 --
@@ -65,7 +69,11 @@ luhnHex = error "TODO: define luhnHex"
 -- [10,11,12,13,14,15]
 
 digitToInt :: Char -> Int
-digitToInt = error "TODO: define digitToInt"
+digitToInt c
+  | c >= '0' && c <= '9' = fromEnum c - fromEnum '0'
+  | c >= 'a' && c <= 'f' = 10 + (fromEnum c - fromEnum 'a')
+  | c >= 'A' && c <= 'F' = 10 + (fromEnum c - fromEnum 'A')
+  | otherwise            = 0
 
 -----------------------------------
 --
@@ -82,7 +90,11 @@ digitToInt = error "TODO: define digitToInt"
 -- False
 
 validateDec :: Integer -> Bool
-validateDec = error "TODO: define validateDec"
+validateDec n =
+  let ds = toDigitsDec n
+  in case ds of
+       [] -> False
+       _  -> luhnDec (initList ds) == lastElem ds
 
 -----------------------------------
 --
@@ -99,4 +111,38 @@ validateDec = error "TODO: define validateDec"
 -- False
 
 validateHex :: [Char] -> Bool
-validateHex = error "TODO: define validateHex"
+validateHex xs =
+  case xs of
+    [] -> False
+    _  -> luhnHex (initList xs) == digitToInt (lastElem xs)
+
+
+-----------------------------------
+
+
+doubleEveryOther :: [Int] -> [Int]
+doubleEveryOther = go True
+  where
+    go _ [] = []
+    go True (x:xs)  = (2 * x) : go False xs
+    go False (x:xs) = x       : go True  xs
+
+normalizeModN :: Int -> Int -> Int
+normalizeModN n x
+  | x >= n    = x - (n - 1)
+  | otherwise = x
+
+toDigitsDec :: Integer -> [Int]
+toDigitsDec k
+  | k <= 0    = []
+  | otherwise = toDigitsDec (k `div` 10) ++ [fromInteger (k `mod` 10)]
+
+lastElem :: [a] -> a
+lastElem [x]    = x
+lastElem (_:xs) = lastElem xs
+lastElem []     = error "empty list"
+
+initList :: [a] -> [a]
+initList [_]    = []
+initList (x:xs) = x : initList xs
+initList []     = []
